@@ -1,0 +1,6 @@
+numpy
+tifffile
+matplotlib
+ashlarUC2
+arkitekt-next[blok,all]
+
