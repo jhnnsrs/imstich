@@ -6,43 +6,33 @@ A Python application for 2D image stitching and stage movement registration usin
 ## Features
 
 - Image stitching with Ashlar UC2
-- Stage movement simulation
+- Creating fake images for testin
 - Integration with `arkitekt-next` for server-based workflows
 - Docker support for easy deployment
 
 ## Requirements
 
 - Docker (for containerized deployment)
-- Python 3.10+ (for local development)
+- Python 3.12+ (for local development)
 - Dependencies listed in `requirements.txt`
 
 ## Installation
 
-### Using Docker
+### Using Devcontainer
+
+This repository comes with a devcontainer setup for easy deployment. To run the application in a container, open the repository in Visual Studio Code and click on the "Reopen in Container" button. Otherwise you will find the Dockerfile in the `.arkitekt_next/flavours/vanilla` directory, which is build
+to run the application.
+
+Then in the container terminal, run the following command to start the application:
+
+```bash
+arkitekt-next run dev
+```
+
+### Using Python
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/ashlar-stitcher.git
-   cd ashlar-stitcher
-   ```
 
-2. Build the Docker image:
-   ```bash
-   docker build -t ashlar-stitcher .
-   ```
-
-3. Run the container:
-   ```bash
-   docker run -p 8000:8000 ashlar-stitcher
-   ```
-
-### Local Development
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/ashlar-stitcher.git
-   cd ashlar-stitcher
-   ```
 
 2. Create a virtual environment:
    ```bash
@@ -57,37 +47,9 @@ A Python application for 2D image stitching and stage movement registration usin
 
 4. Run the script:
    ```bash
-   python test_ashlar_numpy.py
+   arkitekt-next run dev
    ```
 
-## Usage
-
-### Image Stitching
-
-The `stitch2D` function simulates stitching tiles of images with provided position lists and parameters:
-- `pixel_size`: Size of a pixel in microns.
-- `position_list`: List of x-y positions for the tiles.
-- `arrays`: Image arrays in `[tiles, colour, channels, height, width]` format.
-
-### Stage Movement
-
-The `move_stage` function logs axis movements:
-- `axis`: The axis to move (default is `"X"`).
-- `position`: The position to move to.
-
-### Server Interaction
-
-The script registers these functions with an `arkitekt-next` server for remote interaction. Ensure the server URL is correctly set in the `easy` context manager.
-
-## File Structure
-
-```
-ashlar-stitcher/
-├── Dockerfile          # Docker setup
-├── requirements.txt    # Python dependencies
-├── test_ashlar_numpy.py # Main script
-├── README.md           # Documentation
-```
 
 ## Contributing
 
