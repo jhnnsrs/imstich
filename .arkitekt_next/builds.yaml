@@ -1,0 +1,608 @@
+builds:
+- build_id: ca89f6d9-ccfb-49d5-a084-6069da2e1dac
+  build_run: 4dbdcbb9-7dc0-4733-8f50-01a7e2e7aef8
+  description: This is a vanilla flavour
+  flavour: vanilla
+  inspection:
+    requirements:
+    - description: An instance of ArkitektNext Datalayer to make requests to the user's
+        data
+      key: datalayer
+      optional: true
+      service: live.arkitekt.s3
+    - description: An instance of ArkitektNext fluss to retrieve graphs from
+      key: fluss
+      optional: false
+      service: live.arkitekt.fluss
+    - description: An instance of ArkitektNext kabinet to relate entities
+      key: kabinet
+      optional: false
+      service: live.arkitekt.kabinet
+    - description: An instance of ArkitektNext Lok to authenticate the user
+      key: lok
+      optional: false
+      service: live.arkitekt.lok
+    - description: An instance of ArkitektNext Mikro to make requests to the user's
+        data
+      key: mikro
+      optional: true
+      service: live.arkitekt.mikro
+    - description: An instance of ArkitektNext Rekuest to assign to nodes
+      key: rekuest
+      optional: false
+      service: live.arkitekt.rekuest
+    - description: An instance of ArkitektNext Lok to authenticate the user
+      key: unlok
+      optional: false
+      service: live.arkitekt.lok
+    size: 1360015375
+    templates:
+    - definition:
+        args:
+        - default: 3
+          description: Number of tiles in x direction
+          key: tiles_x
+          kind: INT
+          label: tiles_x
+          nullable: true
+          scope: GLOBAL
+        - default: 3
+          description: Number of tiles in y direction
+          key: tiles_y
+          kind: INT
+          label: tiles_y
+          nullable: true
+          scope: GLOBAL
+        collections: []
+        description: Create a set of images that can be stitched together to form
+          an astronaut image
+        interfaces: []
+        isDev: false
+        isTestFor: []
+        kind: FUNCTION
+        name: Create Stichable Astronaut
+        portGroups: []
+        returns:
+        - children:
+          - assignWidget:
+              kind: SEARCH
+              query: "query SearchImages($search: String, $values: [ID!]) {\n  options:\
+                \ images(\n    filters: {name: {contains: $search}, ids: $values}\n\
+                \    pagination: {limit: 10}\n  ) {\n    value: id\n    label: name\n\
+                \    __typename\n  }\n}"
+              ward: mikro
+            identifier: '@mikro/image'
+            key: '...'
+            kind: STRUCTURE
+            nullable: false
+            scope: GLOBAL
+          description: List of images that can be stitched together
+          key: return0
+          kind: LIST
+          nullable: false
+          scope: GLOBAL
+        stateful: false
+      dependencies: []
+      dynamic: false
+      interface: create_stichable_astronaut
+    - definition:
+        args:
+        - assignWidget:
+            kind: SEARCH
+            query: "query SearchStages($search: String, $values: [ID!], $pagination:\
+              \ OffsetPaginationInput) {\n  options: stages(\n    filters: {search:\
+              \ $search, ids: $values}\n    pagination: $pagination\n  ) {\n    value:\
+              \ id\n    label: name\n    __typename\n  }\n}"
+            ward: mikro
+          description: Stage to stitch
+          identifier: '@mikro/stage'
+          key: stage
+          kind: STRUCTURE
+          label: stage
+          nullable: false
+          scope: GLOBAL
+        - default: false
+          description: Flip the images in x direction. Defaults to False.
+          key: flip_x
+          kind: BOOL
+          label: flip_x
+          nullable: true
+          scope: GLOBAL
+        - default: false
+          description: Flip the images in y direction. Defaults to False.
+          key: flip_y
+          kind: BOOL
+          label: flip_y
+          nullable: true
+          scope: GLOBAL
+        - default: 50
+          description: Maximum shift in microns. Defaults to 50.
+          key: maximum_shift_microns
+          kind: INT
+          label: maximum_shift_microns
+          nullable: true
+          scope: GLOBAL
+        - default: 0.01
+          description: Stitch alpha. Defaults to 0.01.
+          key: stitch_alpha
+          kind: FLOAT
+          label: stitch_alpha
+          nullable: true
+          scope: GLOBAL
+        collections: []
+        description: Stitch a stage of images together
+        interfaces: []
+        isDev: false
+        isTestFor: []
+        kind: FUNCTION
+        name: Stitch Stage
+        portGroups: []
+        returns:
+        - assignWidget:
+            kind: SEARCH
+            query: "query SearchImages($search: String, $values: [ID!]) {\n  options:\
+              \ images(\n    filters: {name: {contains: $search}, ids: $values}\n\
+              \    pagination: {limit: 10}\n  ) {\n    value: id\n    label: name\n\
+              \    __typename\n  }\n}"
+            ward: mikro
+          description: Stitched image
+          identifier: '@mikro/image'
+          key: return0
+          kind: STRUCTURE
+          nullable: false
+          scope: GLOBAL
+        stateful: false
+      dependencies: []
+      dynamic: false
+      interface: stitch_stage
+    - definition:
+        args:
+        - default: 1000
+          description: Tile dimension in x direction
+          key: tile_dim_x
+          kind: INT
+          label: tile_dim_x
+          nullable: true
+          scope: GLOBAL
+        - default: 1000
+          description: Tile dimension in y direction
+          key: tile_dim_y
+          kind: INT
+          label: tile_dim_y
+          nullable: true
+          scope: GLOBAL
+        - default: 3
+          description: Number of tiles in x direction
+          key: tiles_x
+          kind: INT
+          label: tiles_x
+          nullable: true
+          scope: GLOBAL
+        - default: 3
+          description: Number of tiles in y direction
+          key: tiles_y
+          kind: INT
+          label: tiles_y
+          nullable: true
+          scope: GLOBAL
+        collections: []
+        description: 'Creates a set of images with random data that can be stitched
+          together
+
+          (mostly for testing purposes, not very useful in practice)'
+        interfaces: []
+        isDev: false
+        isTestFor: []
+        kind: FUNCTION
+        name: Create a set of images that can be stitched together
+        portGroups: []
+        returns:
+        - children:
+          - assignWidget:
+              kind: SEARCH
+              query: "query SearchImages($search: String, $values: [ID!]) {\n  options:\
+                \ images(\n    filters: {name: {contains: $search}, ids: $values}\n\
+                \    pagination: {limit: 10}\n  ) {\n    value: id\n    label: name\n\
+                \    __typename\n  }\n}"
+              ward: mikro
+            identifier: '@mikro/image'
+            key: '...'
+            kind: STRUCTURE
+            nullable: false
+            scope: GLOBAL
+          description: List of images that can be stitched together
+          key: return0
+          kind: LIST
+          nullable: false
+          scope: GLOBAL
+        stateful: false
+      dependencies: []
+      dynamic: false
+      interface: create_stitchable_images
+    - definition:
+        args:
+        - children:
+          - assignWidget:
+              kind: SEARCH
+              query: "query SearchImages($search: String, $values: [ID!]) {\n  options:\
+                \ images(\n    filters: {name: {contains: $search}, ids: $values}\n\
+                \    pagination: {limit: 10}\n  ) {\n    value: id\n    label: name\n\
+                \    __typename\n  }\n}"
+              ward: mikro
+            identifier: '@mikro/image'
+            key: '...'
+            kind: STRUCTURE
+            nullable: false
+            scope: GLOBAL
+          description: List of images to stitch
+          key: images
+          kind: LIST
+          label: images
+          nullable: false
+          scope: GLOBAL
+        - default: false
+          description: Flip the images in x direction. Defaults to False.
+          key: flip_x
+          kind: BOOL
+          label: flip_x
+          nullable: true
+          scope: GLOBAL
+        - default: false
+          description: Flip the images in y direction. Defaults to False.
+          key: flip_y
+          kind: BOOL
+          label: flip_y
+          nullable: true
+          scope: GLOBAL
+        - default: 50
+          description: Maximum shift in microns. Defaults to 50.
+          key: maximum_shift_microns
+          kind: INT
+          label: maximum_shift_microns
+          nullable: true
+          scope: GLOBAL
+        - default: 0.01
+          description: Stitch alpha. Defaults to 0.01.
+          key: stitch_alpha
+          kind: FLOAT
+          label: stitch_alpha
+          nullable: true
+          scope: GLOBAL
+        collections: []
+        description: Stitches a list of images together using the ashlar algorithm
+        interfaces: []
+        isDev: false
+        isTestFor: []
+        kind: FUNCTION
+        name: Stitch a list of images together
+        portGroups: []
+        returns:
+        - assignWidget:
+            kind: SEARCH
+            query: "query SearchImages($search: String, $values: [ID!]) {\n  options:\
+              \ images(\n    filters: {name: {contains: $search}, ids: $values}\n\
+              \    pagination: {limit: 10}\n  ) {\n    value: id\n    label: name\n\
+              \    __typename\n  }\n}"
+            ward: mikro
+          description: Stitched image
+          identifier: '@mikro/image'
+          key: return0
+          kind: STRUCTURE
+          nullable: false
+          scope: GLOBAL
+        stateful: false
+      dependencies: []
+      dynamic: false
+      interface: stitch2_d
+  manifest:
+    author: jhnnsrs
+    entrypoint: app
+    identifier: imstich
+    scopes:
+    - read
+    version: 0.0.1
+  selectors: []
+- build_id: fb88db9c-0900-449e-a221-a2dc74b421b4
+  build_run: e7fb8267-537a-4a92-a910-dc68946e164c
+  description: This is a vanilla flavour
+  flavour: vanilla
+  inspection:
+    requirements:
+    - description: An instance of ArkitektNext Datalayer to make requests to the user's
+        data
+      key: datalayer
+      optional: true
+      service: live.arkitekt.s3
+    - description: An instance of ArkitektNext fluss to retrieve graphs from
+      key: fluss
+      optional: false
+      service: live.arkitekt.fluss
+    - description: An instance of ArkitektNext kabinet to relate entities
+      key: kabinet
+      optional: false
+      service: live.arkitekt.kabinet
+    - description: An instance of ArkitektNext Lok to authenticate the user
+      key: lok
+      optional: false
+      service: live.arkitekt.lok
+    - description: An instance of ArkitektNext Mikro to make requests to the user's
+        data
+      key: mikro
+      optional: true
+      service: live.arkitekt.mikro
+    - description: An instance of ArkitektNext Rekuest to assign to nodes
+      key: rekuest
+      optional: false
+      service: live.arkitekt.rekuest
+    - description: An instance of ArkitektNext Lok to authenticate the user
+      key: unlok
+      optional: false
+      service: live.arkitekt.lok
+    size: 1360033578
+    templates:
+    - definition:
+        args:
+        - default: 3
+          description: Number of tiles in x direction
+          key: tiles_x
+          kind: INT
+          label: tiles_x
+          nullable: true
+          scope: GLOBAL
+        - default: 3
+          description: Number of tiles in y direction
+          key: tiles_y
+          kind: INT
+          label: tiles_y
+          nullable: true
+          scope: GLOBAL
+        collections: []
+        description: Create a set of images that can be stitched together to form
+          an astronaut image
+        interfaces: []
+        isDev: false
+        isTestFor: []
+        kind: FUNCTION
+        name: Create Stichable Astronaut
+        portGroups: []
+        returns:
+        - children:
+          - assignWidget:
+              kind: SEARCH
+              query: "query SearchImages($search: String, $values: [ID!]) {\n  options:\
+                \ images(\n    filters: {name: {contains: $search}, ids: $values}\n\
+                \    pagination: {limit: 10}\n  ) {\n    value: id\n    label: name\n\
+                \    __typename\n  }\n}"
+              ward: mikro
+            identifier: '@mikro/image'
+            key: '...'
+            kind: STRUCTURE
+            nullable: false
+            scope: GLOBAL
+          description: List of images that can be stitched together
+          key: return0
+          kind: LIST
+          nullable: false
+          scope: GLOBAL
+        stateful: false
+      dependencies: []
+      dynamic: false
+      interface: create_stichable_astronaut
+    - definition:
+        args:
+        - assignWidget:
+            kind: SEARCH
+            query: "query SearchStages($search: String, $values: [ID!], $pagination:\
+              \ OffsetPaginationInput) {\n  options: stages(\n    filters: {search:\
+              \ $search, ids: $values}\n    pagination: $pagination\n  ) {\n    value:\
+              \ id\n    label: name\n    __typename\n  }\n}"
+            ward: mikro
+          description: Stage to stitch
+          identifier: '@mikro/stage'
+          key: stage
+          kind: STRUCTURE
+          label: stage
+          nullable: false
+          scope: GLOBAL
+        - default: false
+          description: Flip the images in x direction. Defaults to False.
+          key: flip_x
+          kind: BOOL
+          label: flip_x
+          nullable: true
+          scope: GLOBAL
+        - default: false
+          description: Flip the images in y direction. Defaults to False.
+          key: flip_y
+          kind: BOOL
+          label: flip_y
+          nullable: true
+          scope: GLOBAL
+        - default: 50
+          description: Maximum shift in microns. Defaults to 50.
+          key: maximum_shift_microns
+          kind: INT
+          label: maximum_shift_microns
+          nullable: true
+          scope: GLOBAL
+        - default: 0.01
+          description: Stitch alpha. Defaults to 0.01.
+          key: stitch_alpha
+          kind: FLOAT
+          label: stitch_alpha
+          nullable: true
+          scope: GLOBAL
+        collections: []
+        description: Stitch a stage of images together
+        interfaces: []
+        isDev: false
+        isTestFor: []
+        kind: FUNCTION
+        name: Stitch Stage
+        portGroups: []
+        returns:
+        - assignWidget:
+            kind: SEARCH
+            query: "query SearchImages($search: String, $values: [ID!]) {\n  options:\
+              \ images(\n    filters: {name: {contains: $search}, ids: $values}\n\
+              \    pagination: {limit: 10}\n  ) {\n    value: id\n    label: name\n\
+              \    __typename\n  }\n}"
+            ward: mikro
+          description: Stitched image
+          identifier: '@mikro/image'
+          key: return0
+          kind: STRUCTURE
+          nullable: false
+          scope: GLOBAL
+        stateful: false
+      dependencies: []
+      dynamic: false
+      interface: stitch_stage
+    - definition:
+        args:
+        - default: 1000
+          description: Tile dimension in x direction
+          key: tile_dim_x
+          kind: INT
+          label: tile_dim_x
+          nullable: true
+          scope: GLOBAL
+        - default: 1000
+          description: Tile dimension in y direction
+          key: tile_dim_y
+          kind: INT
+          label: tile_dim_y
+          nullable: true
+          scope: GLOBAL
+        - default: 3
+          description: Number of tiles in x direction
+          key: tiles_x
+          kind: INT
+          label: tiles_x
+          nullable: true
+          scope: GLOBAL
+        - default: 3
+          description: Number of tiles in y direction
+          key: tiles_y
+          kind: INT
+          label: tiles_y
+          nullable: true
+          scope: GLOBAL
+        collections: []
+        description: 'Creates a set of images with random data that can be stitched
+          together
+
+          (mostly for testing purposes, not very useful in practice)'
+        interfaces: []
+        isDev: false
+        isTestFor: []
+        kind: FUNCTION
+        name: Create a set of images that can be stitched together
+        portGroups: []
+        returns:
+        - children:
+          - assignWidget:
+              kind: SEARCH
+              query: "query SearchImages($search: String, $values: [ID!]) {\n  options:\
+                \ images(\n    filters: {name: {contains: $search}, ids: $values}\n\
+                \    pagination: {limit: 10}\n  ) {\n    value: id\n    label: name\n\
+                \    __typename\n  }\n}"
+              ward: mikro
+            identifier: '@mikro/image'
+            key: '...'
+            kind: STRUCTURE
+            nullable: false
+            scope: GLOBAL
+          description: List of images that can be stitched together
+          key: return0
+          kind: LIST
+          nullable: false
+          scope: GLOBAL
+        stateful: false
+      dependencies: []
+      dynamic: false
+      interface: create_stitchable_images
+    - definition:
+        args:
+        - children:
+          - assignWidget:
+              kind: SEARCH
+              query: "query SearchImages($search: String, $values: [ID!]) {\n  options:\
+                \ images(\n    filters: {name: {contains: $search}, ids: $values}\n\
+                \    pagination: {limit: 10}\n  ) {\n    value: id\n    label: name\n\
+                \    __typename\n  }\n}"
+              ward: mikro
+            identifier: '@mikro/image'
+            key: '...'
+            kind: STRUCTURE
+            nullable: false
+            scope: GLOBAL
+          description: List of images to stitch
+          key: images
+          kind: LIST
+          label: images
+          nullable: false
+          scope: GLOBAL
+        - default: false
+          description: Flip the images in x direction. Defaults to False.
+          key: flip_x
+          kind: BOOL
+          label: flip_x
+          nullable: true
+          scope: GLOBAL
+        - default: false
+          description: Flip the images in y direction. Defaults to False.
+          key: flip_y
+          kind: BOOL
+          label: flip_y
+          nullable: true
+          scope: GLOBAL
+        - default: 50
+          description: Maximum shift in microns. Defaults to 50.
+          key: maximum_shift_microns
+          kind: INT
+          label: maximum_shift_microns
+          nullable: true
+          scope: GLOBAL
+        - default: 0.01
+          description: Stitch alpha. Defaults to 0.01.
+          key: stitch_alpha
+          kind: FLOAT
+          label: stitch_alpha
+          nullable: true
+          scope: GLOBAL
+        collections: []
+        description: Stitches a list of images together using the ashlar algorithm
+        interfaces: []
+        isDev: false
+        isTestFor: []
+        kind: FUNCTION
+        name: Stitch a list of images together
+        portGroups: []
+        returns:
+        - assignWidget:
+            kind: SEARCH
+            query: "query SearchImages($search: String, $values: [ID!]) {\n  options:\
+              \ images(\n    filters: {name: {contains: $search}, ids: $values}\n\
+              \    pagination: {limit: 10}\n  ) {\n    value: id\n    label: name\n\
+              \    __typename\n  }\n}"
+            ward: mikro
+          description: Stitched image
+          identifier: '@mikro/image'
+          key: return0
+          kind: STRUCTURE
+          nullable: false
+          scope: GLOBAL
+        stateful: false
+      dependencies: []
+      dynamic: false
+      interface: stitch2_d
+  manifest:
+    author: jhnnsrs
+    entrypoint: app
+    identifier: imstich
+    scopes:
+    - read
+    version: 0.0.1
+  selectors: []
+latest_build_run: e7fb8267-537a-4a92-a910-dc68946e164c
