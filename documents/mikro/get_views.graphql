@@ -1,0 +1,18 @@
+
+query GetStageViews($stageId: ID!) {
+  stage(id: $stageId)  {
+    affineViews {
+        id 
+        affineMatrix
+        image {
+            id
+            name
+            store {
+                id
+                key
+                bucket
+            }
+        }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
     "name": "imstich vanilla Devcontainer",
     "build": {
-        "dockerfile": "/home/jhnnsrs/Code/apps/imstich/.arkitekt_next/flavours/vanilla/Dockerfile",
+        "dockerfile": "../../.arkitekt_next/flavours/vanilla/Dockerfile",
         "context": "../.."
     },
     "runArgs": [

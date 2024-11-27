@@ -1,0 +1,3155 @@
+"""Make string uppercase"""
+directive @upper on FIELD
+
+directive @replace(old: String!, new: String!) on FIELD
+
+"""Make get stuff uppercase"""
+directive @relation(on: String!) on FIELD
+
+interface RenderNode {
+  kind: String!
+}
+
+type ContextNode implements RenderNode {
+  kind: String!
+  context: RGBContext!
+  label: String
+}
+
+type RGBContext {
+  id: ID!
+  name: String!
+  image: Image!
+  snapshots(filters: SnapshotFilter, pagination: OffsetPaginationInput): [Snapshot!]!
+  views: [RGBView!]!
+  blending: Blending!
+  z: Int!
+  t: Int!
+  c: Int!
+  pinned: Boolean!
+}
+
+type Image {
+  id: ID!
+
+  """The name of the image"""
+  name: String!
+
+  """The store where the image data is stored."""
+  store: ZarrStore!
+
+  """All views of this image"""
+  views(
+    """A filter to selected the subset of views"""
+    filters: ViewFilter
+    types: [ViewKind!]
+  ): [View!]!
+
+  """Associated snapshots"""
+  snapshots(filters: SnapshotFilter, pagination: OffsetPaginationInput): [Snapshot!]!
+
+  """Associated videos"""
+  videos(pagination: OffsetPaginationInput): [Video!]!
+
+  """The dataset this image belongs to"""
+  dataset: Dataset
+
+  """History of changes to this image"""
+  history(pagination: OffsetPaginationInput): [History!]!
+
+  """The affine transformation views describing position and scale"""
+  affineTransformationViews(filters: AffineTransformationViewFilter, pagination: OffsetPaginationInput): [AffineTransformationView!]!
+
+  """Label views mapping channels to labels"""
+  labelViews: [LabelView!]!
+
+  """Channel views relating to acquisition channels"""
+  channelViews: [ChannelView!]!
+
+  """Timepoint views describing temporal relationships"""
+  timepointViews(filters: TimepointViewFilter, pagination: OffsetPaginationInput): [TimepointView!]!
+
+  """Optics views describing acquisition settings"""
+  opticsViews(filters: OpticsViewFilter, pagination: OffsetPaginationInput): [OpticsView!]!
+
+  """
+  Structure views relating other Arkitekt types to a subsection of the image
+  """
+  structureViews(filters: StructureViewFilter, pagination: OffsetPaginationInput): [StructureView!]!
+
+  """Scale views describing physical dimensions"""
+  scaleViews: [ScaleView!]!
+
+  """When this image was created"""
+  createdAt: DateTime!
+
+  """Who created this image"""
+  creator: User
+
+  """RGB rendering contexts"""
+  rgbContexts(filters: RGBContextFilter, pagination: OffsetPaginationInput): [RGBContext!]!
+
+  """Scale views derived from this image"""
+  derivedScaleViews: [ScaleView!]!
+
+  """Views derived from this image"""
+  derivedViews: [DerivedView!]!
+
+  """Region of interest views"""
+  roiViews: [ROIView!]!
+
+  """File views relating to source files"""
+  fileViews: [FileView!]!
+
+  """Pixel views describing pixel value semantics"""
+  pixelViews(filters: PixelViewFilter, pagination: OffsetPaginationInput): [PixelView!]!
+
+  """Views this image was derived from"""
+  derivedFromViews: [DerivedView!]!
+
+  """The latest snapshot of this image"""
+  latestSnapshot: Snapshot
+
+  """Is this image pinned by the current user"""
+  pinned: Boolean!
+
+  """The tags of this image"""
+  tags: [String!]!
+  renders(filters: ViewFilter, types: [RenderKind!]): [Render!]!
+  rois(filters: ROIFilter): [ROI!]!
+}
+
+type ZarrStore {
+  id: ID!
+
+  """The path to the data. Relative to the bucket."""
+  path: String
+
+  """The shape of the data."""
+  shape: [Int!]
+
+  """The dtype of the data."""
+  dtype: String
+
+  """The bucket where the data is stored."""
+  bucket: String!
+
+  """The key where the data is stored."""
+  key: String!
+
+  """The chunks of the data."""
+  chunks: [Int!]
+
+  """Whether the zarr store was populated (e.g. was a dataset created)."""
+  populated: Boolean!
+}
+
+interface View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+}
+
+input ViewFilter {
+  isGlobal: Boolean
+  provenance: ProvenanceFilter
+  AND: ViewFilter
+  OR: ViewFilter
+}
+
+input ProvenanceFilter {
+  during: String
+  AND: ProvenanceFilter
+  OR: ProvenanceFilter
+}
+
+enum ViewKind {
+  CHANNEL
+  LABEL
+  AFFINE_TRANSFORMATION
+  TIMEPOINT
+  OPTICS
+}
+
+type Snapshot implements Render {
+  createdAt: DateTime!
+  creator: User
+  id: ID!
+  store: MediaStore!
+  name: String!
+}
+
+interface Render {
+  createdAt: DateTime!
+  creator: User
+}
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
+"""A user."""
+type User {
+  id: ID!
+  sub: String!
+  username: String!
+  email: String!
+  password: String!
+}
+
+type MediaStore {
+  id: ID!
+  path: String!
+  bucket: String!
+  key: String!
+  presignedUrl(host: String = null): String!
+}
+
+input SnapshotFilter {
+  name: StrFilterLookup
+  ids: [ID!]
+  AND: SnapshotFilter
+  OR: SnapshotFilter
+}
+
+input StrFilterLookup {
+  exact: String
+  iExact: String
+  contains: String
+  iContains: String
+  inList: [String!]
+  gt: String
+  gte: String
+  lt: String
+  lte: String
+  startsWith: String
+  iStartsWith: String
+  endsWith: String
+  iEndsWith: String
+  range: [String!]
+  isNull: Boolean
+  regex: String
+  iRegex: String
+  nExact: String
+  nIExact: String
+  nContains: String
+  nIContains: String
+  nInList: [String!]
+  nGt: String
+  nGte: String
+  nLt: String
+  nLte: String
+  nStartsWith: String
+  nIStartsWith: String
+  nEndsWith: String
+  nIEndsWith: String
+  nRange: [String!]
+  nIsNull: Boolean
+  nRegex: String
+  nIRegex: String
+}
+
+input OffsetPaginationInput {
+  offset: Int! = 0
+  limit: Int! = -1
+}
+
+type Video implements Render {
+  createdAt: DateTime!
+  creator: User
+  id: ID!
+  store: MediaStore!
+  thumbnail: MediaStore!
+}
+
+type Dataset {
+  id: ID!
+  images(filters: ImageFilter, order: ImageOrder, pagination: OffsetPaginationInput): [Image!]!
+  files(filters: FileFilter, pagination: OffsetPaginationInput): [File!]!
+  children(filters: DatasetFilter, pagination: OffsetPaginationInput): [Dataset!]!
+  description: String
+  name: String!
+  history(pagination: OffsetPaginationInput): [History!]!
+  isDefault: Boolean!
+  createdAt: DateTime!
+  creator: User
+  pinned: Boolean!
+  tags: [String!]!
+}
+
+input ImageFilter {
+  name: StrFilterLookup
+  ids: [ID!]
+  store: ZarrStoreFilter
+  dataset: DatasetFilter
+  transformationViews: AffineTransformationViewFilter
+  timepointViews: TimepointViewFilter
+  notDerived: Boolean = null
+  provenance: ProvenanceFilter
+  AND: ImageFilter
+  OR: ImageFilter
+}
+
+input ZarrStoreFilter {
+  shape: IntFilterLookup
+  AND: ZarrStoreFilter
+  OR: ZarrStoreFilter
+}
+
+input IntFilterLookup {
+  exact: Int
+  iExact: Int
+  contains: Int
+  iContains: Int
+  inList: [Int!]
+  gt: Int
+  gte: Int
+  lt: Int
+  lte: Int
+  startsWith: Int
+  iStartsWith: Int
+  endsWith: Int
+  iEndsWith: Int
+  range: [Int!]
+  isNull: Boolean
+  regex: String
+  iRegex: String
+  nExact: Int
+  nIExact: Int
+  nContains: Int
+  nIContains: Int
+  nInList: [Int!]
+  nGt: Int
+  nGte: Int
+  nLt: Int
+  nLte: Int
+  nStartsWith: Int
+  nIStartsWith: Int
+  nEndsWith: Int
+  nIEndsWith: Int
+  nRange: [Int!]
+  nIsNull: Boolean
+  nRegex: String
+  nIRegex: String
+}
+
+input DatasetFilter {
+  id: ID
+  name: StrFilterLookup
+  provenance: ProvenanceFilter
+  AND: DatasetFilter
+  OR: DatasetFilter
+}
+
+input AffineTransformationViewFilter {
+  isGlobal: Boolean
+  provenance: ProvenanceFilter
+  AND: AffineTransformationViewFilter
+  OR: AffineTransformationViewFilter
+  stage: StageFilter
+  pixelSize: FloatFilterLookup
+}
+
+input StageFilter {
+  ids: [ID!]
+  search: String
+  id: ID
+  kind: String
+  name: StrFilterLookup
+  provenance: ProvenanceFilter
+  AND: StageFilter
+  OR: StageFilter
+}
+
+input FloatFilterLookup {
+  exact: Float
+  iExact: Float
+  contains: Float
+  iContains: Float
+  inList: [Float!]
+  gt: Float
+  gte: Float
+  lt: Float
+  lte: Float
+  startsWith: Float
+  iStartsWith: Float
+  endsWith: Float
+  iEndsWith: Float
+  range: [Float!]
+  isNull: Boolean
+  regex: String
+  iRegex: String
+  nExact: Float
+  nIExact: Float
+  nContains: Float
+  nIContains: Float
+  nInList: [Float!]
+  nGt: Float
+  nGte: Float
+  nLt: Float
+  nLte: Float
+  nStartsWith: Float
+  nIStartsWith: Float
+  nEndsWith: Float
+  nIEndsWith: Float
+  nRange: [Float!]
+  nIsNull: Boolean
+  nRegex: String
+  nIRegex: String
+}
+
+input TimepointViewFilter {
+  isGlobal: Boolean
+  provenance: ProvenanceFilter
+  AND: TimepointViewFilter
+  OR: TimepointViewFilter
+  era: EraFilter
+  msSinceStart: Float
+  indexSinceStart: Int
+}
+
+input EraFilter {
+  id: ID
+  begin: DateTime
+  provenance: ProvenanceFilter
+  AND: EraFilter
+  OR: EraFilter
+}
+
+input ImageOrder {
+  createdAt: Ordering
+}
+
+enum Ordering {
+  ASC
+  DESC
+}
+
+type File {
+  id: ID!
+  name: String!
+  origins(filters: ImageFilter, order: ImageOrder, pagination: OffsetPaginationInput): [Image!]!
+  store: BigFileStore!
+  views: [FileView!]!
+}
+
+type BigFileStore {
+  id: ID!
+  path: String!
+  bucket: String!
+  key: String!
+  presignedUrl: String!
+}
+
+type FileView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  seriesIdentifier: String
+  file: File!
+}
+
+input FileFilter {
+  ids: [ID!]
+  search: String
+  id: ID
+  name: StrFilterLookup
+  provenance: ProvenanceFilter
+  AND: FileFilter
+  OR: FileFilter
+}
+
+type History {
+  app: App
+  user: User
+  kind: HistoryKind!
+  date: DateTime!
+  during: String
+  id: ID!
+  effectiveChanges: [ModelChange!]!
+}
+
+"""An app."""
+type App {
+  id: ID!
+  name: String!
+  clientId: String!
+}
+
+enum HistoryKind {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+type ModelChange {
+  field: String!
+  oldValue: String
+  newValue: String
+}
+
+type AffineTransformationView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  stage: Stage!
+  affineMatrix: FourByFourMatrix!
+  pixelSize: ThreeDVector!
+  pixelSizeX: Micrometers!
+  pixelSizeY: Micrometers!
+  position: ThreeDVector!
+}
+
+type Stage {
+  id: ID!
+  affineViews(filters: AffineTransformationViewFilter, pagination: OffsetPaginationInput): [AffineTransformationView!]!
+  description: String
+  name: String!
+  history(pagination: OffsetPaginationInput): [History!]!
+  pinned: Boolean!
+}
+
+"""
+The `FourByFourMatrix` scalar type represents a matrix values as specified by
+"""
+scalar FourByFourMatrix
+
+"""The `Vector` scalar type represents a matrix values as specified by"""
+scalar ThreeDVector
+
+"""
+The `Micrometers` scalar type represents a matrix valuesas specified by
+"""
+scalar Micrometers
+
+type LabelView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  label: String!
+}
+
+type ChannelView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  channel: Channel!
+}
+
+type Channel {
+  id: ID!
+  views: [ChannelView!]!
+  name: String!
+  emissionWavelength: Float
+  excitationWavelength: Float
+  acquisitionMode: String
+  color: String
+}
+
+type TimepointView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  era: Era!
+  msSinceStart: Milliseconds
+  indexSinceStart: Int
+}
+
+type Era {
+  id: ID!
+  begin: DateTime
+  views(filters: TimepointViewFilter, pagination: OffsetPaginationInput): [TimepointView!]!
+  name: String!
+  history(pagination: OffsetPaginationInput): [History!]!
+}
+
+"""The `Matrix` scalar type represents a matrix values as specified by"""
+scalar Milliseconds
+
+type OpticsView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  instrument: Instrument
+  camera: Camera
+  objective: Objective
+}
+
+type Instrument {
+  id: ID!
+  name: String!
+  model: String
+  serialNumber: String!
+  views(filters: OpticsViewFilter, pagination: OffsetPaginationInput): [OpticsView!]!
+  manufacturer: String
+}
+
+input OpticsViewFilter {
+  isGlobal: Boolean
+  provenance: ProvenanceFilter
+  AND: OpticsViewFilter
+  OR: OpticsViewFilter
+  instrument: InstrumentFilter
+  objective: ObjectiveFilter
+  camera: CameraFilter
+}
+
+input InstrumentFilter {
+  id: ID
+  name: String
+  provenance: ProvenanceFilter
+  AND: InstrumentFilter
+  OR: InstrumentFilter
+}
+
+input ObjectiveFilter {
+  id: ID
+  name: String
+  provenance: ProvenanceFilter
+  AND: ObjectiveFilter
+  OR: ObjectiveFilter
+}
+
+input CameraFilter {
+  id: ID
+  name: String
+  provenance: ProvenanceFilter
+  AND: CameraFilter
+  OR: CameraFilter
+}
+
+type Camera {
+  id: ID!
+  name: String!
+  serialNumber: String!
+  views(filters: OpticsViewFilter, pagination: OffsetPaginationInput): [OpticsView!]!
+  model: String
+  bitDepth: Int
+  pixelSizeX: Micrometers
+  pixelSizeY: Micrometers
+  sensorSizeX: Int
+  sensorSizeY: Int
+  manufacturer: String
+  history(pagination: OffsetPaginationInput): [History!]!
+}
+
+type Objective {
+  id: ID!
+  name: String!
+  serialNumber: String!
+  na: Float
+  magnification: Float
+  immersion: String
+  views(filters: OpticsViewFilter, pagination: OffsetPaginationInput): [OpticsView!]!
+}
+
+type StructureView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  structure: StructureString!
+}
+
+"""
+The `StructureString` scalar type represents a reference to a strucutre outside of this service previously created by the user n a datalayer
+"""
+scalar StructureString
+
+input StructureViewFilter {
+  isGlobal: Boolean
+  provenance: ProvenanceFilter
+  AND: StructureViewFilter
+  OR: StructureViewFilter
+  structure: StructureString
+}
+
+type ScaleView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  parent: Image!
+  scaleX: Float!
+  scaleY: Float!
+  scaleZ: Float!
+  scaleT: Float!
+  scaleC: Float!
+}
+
+input RGBContextFilter {
+  ids: [ID!]
+  search: String
+  id: ID
+  provenance: ProvenanceFilter
+  AND: RGBContextFilter
+  OR: RGBContextFilter
+}
+
+type DerivedView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  originImage: Image!
+  operation: String
+}
+
+type ROIView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  roi: ROI!
+}
+
+type ROI {
+  id: ID!
+  image: Image!
+  kind: RoiKind!
+  vectors: [FiveDVector!]!
+  createdAt: DateTime!
+  creator: User
+  history(pagination: OffsetPaginationInput): [History!]!
+  pinned: Boolean!
+  name: String!
+}
+
+enum RoiKind {
+  ELLIPSIS
+  POLYGON
+  LINE
+  RECTANGLE
+  SPECTRAL_RECTANGLE
+  TEMPORAL_RECTANGLE
+  CUBE
+  SPECTRAL_CUBE
+  TEMPORAL_CUBE
+  HYPERCUBE
+  SPECTRAL_HYPERCUBE
+  PATH
+  FRAME
+  SLICE
+  POINT
+}
+
+"""The `Vector` scalar type represents a matrix values as specified by"""
+scalar FiveDVector
+
+type PixelView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  labels(filters: PixelLabelFilter, pagination: OffsetPaginationInput): [PixelLabel!]!
+  labelAccessors: [LabelAccessor!]!
+}
+
+type PixelLabel {
+  id: ID!
+  view: PixelView!
+  value: Int!
+}
+
+input PixelLabelFilter {
+  value: Float = null
+  view: ID = null
+  entityKind: ID = null
+  entity: ID = null
+  AND: PixelLabelFilter
+  OR: PixelLabelFilter
+}
+
+type LabelAccessor implements Accessor {
+  id: ID!
+  table: Table!
+  keys: [String!]!
+  minIndex: Int
+  maxIndex: Int
+  pixelView: PixelView!
+}
+
+interface Accessor {
+  id: ID!
+  table: Table!
+  keys: [String!]!
+  minIndex: Int
+  maxIndex: Int
+}
+
+type Table {
+  id: ID!
+  name: String!
+  origins(filters: ImageFilter, order: ImageOrder, pagination: OffsetPaginationInput): [Image!]!
+  store: ParquetStore!
+  columns: [TableColumn!]!
+  rows: [MetricMap!]!
+  accessors(filters: AccessorFilter, types: [AccessorKind!]): [Accessor!]!
+}
+
+type ParquetStore {
+  id: ID!
+  path: String!
+  bucket: String!
+  key: String!
+}
+
+"""A column descriptor"""
+type TableColumn {
+  name: String!
+  type: DuckDBDataType!
+  nullable: Boolean!
+  key: String
+  default: String
+  accessors(filters: AccessorFilter, types: [AccessorKind!]): [Accessor!]!
+}
+
+enum DuckDBDataType {
+  """Represents a True/False value"""
+  BOOLEAN
+
+  """Very small integer (-128 to 127)"""
+  TINYINT
+
+  """Small integer (-32,768 to 32,767)"""
+  SMALLINT
+
+  """Standard integer (-2,147,483,648 to 2,147,483,647)"""
+  INTEGER
+
+  """Large integer for large numeric values"""
+  BIGINT
+
+  """Extremely large integer for very large numeric ranges"""
+  HUGEINT
+
+  """Single-precision floating point number"""
+  FLOAT
+
+  """Double-precision floating point number"""
+  DOUBLE
+
+  """Variable-length string (text)"""
+  VARCHAR
+
+  """Binary large object for storing binary data"""
+  BLOB
+
+  """Date and time with precision"""
+  TIMESTAMP
+
+  """Specific date (year, month, day)"""
+  DATE
+
+  """Specific time of the day (hours, minutes, seconds)"""
+  TIME
+
+  """Span of time between two dates or times"""
+  INTERVAL
+
+  """Exact decimal number with defined precision and scale"""
+  DECIMAL
+
+  """Universally Unique Identifier used to uniquely identify objects"""
+  UUID
+
+  """A list of values of the same data type"""
+  LIST
+
+  """A collection of key-value pairs where each key is unique"""
+  MAP
+
+  """Enumeration of predefined values"""
+  ENUM
+
+  """Composite type grouping several fields with different data types"""
+  STRUCT
+
+  """JSON object, a structured text format used for representing data"""
+  JSON
+}
+
+input AccessorFilter {
+  keys: JSON
+  provenance: ProvenanceFilter
+  AND: AccessorFilter
+  OR: AccessorFilter
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+enum AccessorKind {
+  LABEL
+  IMAGE
+}
+
+"""The `MetricMap` scalar type represents a matrix values as specified by"""
+scalar MetricMap
+
+input PixelViewFilter {
+  isGlobal: Boolean
+  provenance: ProvenanceFilter
+  AND: PixelViewFilter
+  OR: PixelViewFilter
+}
+
+enum RenderKind {
+  VIDEO
+  SNAPSHOT
+}
+
+input ROIFilter {
+  ids: [ID!]
+  id: ID
+  kind: RoiKindChoices
+  image: ID = null
+  search: String
+  AND: ROIFilter
+  OR: ROIFilter
+}
+
+enum RoiKindChoices {
+  ELLIPSIS
+  POLYGON
+  LINE
+  RECTANGLE
+  SPECTRAL_RECTANGLE
+  TEMPORAL_RECTANGLE
+  CUBE
+  SPECTRAL_CUBE
+  TEMPORAL_CUBE
+  HYPERCUBE
+  SPECTRAL_HYPERCUBE
+  PATH
+  UNKNOWN
+  FRAME
+  SLICE
+  POINT
+}
+
+type RGBView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  contexts(filters: RGBContextFilter, pagination: OffsetPaginationInput): [RGBContext!]!
+  colorMap: ColorMap!
+  gamma: Float
+  contrastLimitMin: Float
+  contrastLimitMax: Float
+  rescale: Boolean!
+  active: Boolean!
+  baseColor: [Int!]
+  fullColour(format: ColorFormat = RGB): String!
+  name(long: Boolean! = false): String!
+}
+
+enum ColorMap {
+  VIRIDIS
+  PLASMA
+  INFERNO
+  MAGMA
+  RED
+  GREEN
+  BLUE
+  INTENSITY
+}
+
+enum ColorFormat {
+  RGB
+  HSL
+}
+
+enum Blending {
+  ADDITIVE
+  MULTIPLICATIVE
+}
+
+type OverlayNode implements RenderNode {
+  kind: String!
+  children: [RenderNode!]!
+  label: String
+}
+
+type GridNode implements RenderNode {
+  kind: String!
+  children: [RenderNode!]!
+  gap: Int
+  label: String
+}
+
+type SplitNode implements RenderNode {
+  kind: String!
+  children: [RenderNode!]!
+  label: String
+}
+
+type Query {
+  images(filters: ImageFilter, order: ImageOrder, pagination: OffsetPaginationInput): [Image!]!
+  rois(filters: ROIFilter, pagination: OffsetPaginationInput): [ROI!]!
+  myimages(filters: ImageFilter, order: ImageOrder, pagination: OffsetPaginationInput): [Image!]!
+  datasets(filters: DatasetFilter, pagination: OffsetPaginationInput): [Dataset!]!
+  mydatasets(filters: DatasetFilter, pagination: OffsetPaginationInput): [Dataset!]!
+  timepointViews(filters: TimepointViewFilter, pagination: OffsetPaginationInput): [TimepointView!]!
+  labelViews: [LabelView!]!
+  channelViews: [ChannelView!]!
+  continousScanViews(filters: ContinousScanViewFilter, pagination: OffsetPaginationInput): [ContinousScanView!]!
+  wellPositionViews(filters: WellPositionViewFilter, pagination: OffsetPaginationInput): [WellPositionView!]!
+  acquisitionViews: [AcquisitionView!]!
+  rgbViews: [RGBView!]!
+  affineTransformationViews(filters: AffineTransformationViewFilter, pagination: OffsetPaginationInput): [AffineTransformationView!]!
+  scaleViews: [ScaleView!]!
+  eras(filters: EraFilter, pagination: OffsetPaginationInput): [Era!]!
+  myeras(filters: EraFilter, pagination: OffsetPaginationInput): [Era!]!
+  renderedPlots(filters: RenderedPlotFilter, pagination: OffsetPaginationInput): [RenderedPlot!]!
+  stages(filters: StageFilter, pagination: OffsetPaginationInput): [Stage!]!
+  renderTrees(filters: RenderTreeFilter, order: RenderTreeOrder, pagination: OffsetPaginationInput): [RenderTree!]!
+  experiments(filters: ExperimentFilter, pagination: OffsetPaginationInput): [Experiment!]!
+  channels: [Channel!]!
+  rgbcontexts(filters: RGBContextFilter, pagination: OffsetPaginationInput): [RGBContext!]!
+  mychannels: [Channel!]!
+  instruments: [Instrument!]!
+  multiWellPlates(filters: MultiWellPlateFilter, pagination: OffsetPaginationInput): [MultiWellPlate!]!
+  objectives: [Objective!]!
+  myobjectives: [Objective!]!
+  specimenViews(filters: StructureViewFilter, pagination: OffsetPaginationInput): [StructureView!]!
+  tables(filters: TableFilter, pagination: OffsetPaginationInput): [Table!]!
+  mytables(filters: TableFilter, pagination: OffsetPaginationInput): [Table!]!
+  snapshots(filters: SnapshotFilter, pagination: OffsetPaginationInput): [Snapshot!]!
+  mysnapshots(filters: SnapshotFilter, pagination: OffsetPaginationInput): [Snapshot!]!
+  files(filters: FileFilter, pagination: OffsetPaginationInput): [File!]!
+  myfiles(filters: FileFilter, pagination: OffsetPaginationInput): [File!]!
+  randomImage: Image!
+  labelAccessors: [LabelAccessor!]!
+  imageAccessors: [ImageAccessor!]!
+  children(parent: ID!, filters: DatasetChildrenFilter = null, pagination: ChildrenPaginationInput = null): [DatasetImageFile!]!
+  rows(table: ID!, filters: RowFilter = null, pagination: TablePaginationInput = null): [MetricMap!]!
+  pixelView(
+    """The unique identifier of an object"""
+    id: ID!
+  ): PixelView!
+
+  """Returns a single image by ID"""
+  image(
+    """The unique identifier of an object"""
+    id: ID!
+  ): Image!
+  roi(
+    """The unique identifier of an object"""
+    id: ID!
+  ): ROI!
+  renderTree(
+    """The unique identifier of an object"""
+    id: ID!
+  ): RenderTree!
+  rgbcontext(
+    """The unique identifier of an object"""
+    id: ID!
+  ): RGBContext!
+  objective(
+    """The unique identifier of an object"""
+    id: ID!
+  ): Objective!
+  camera(
+    """The unique identifier of an object"""
+    id: ID!
+  ): Camera!
+  snapshot(
+    """The unique identifier of an object"""
+    id: ID!
+  ): Snapshot!
+  file(
+    """The unique identifier of an object"""
+    id: ID!
+  ): File!
+  table(
+    """The unique identifier of an object"""
+    id: ID!
+  ): Table!
+  instrument(
+    """The unique identifier of an object"""
+    id: ID!
+  ): Instrument!
+  dataset(
+    """The unique identifier of an object"""
+    id: ID!
+  ): Dataset!
+  multiWellPlate(
+    """The unique identifier of an object"""
+    id: ID!
+  ): MultiWellPlate!
+  stage(
+    """The unique identifier of an object"""
+    id: ID!
+  ): Stage!
+  renderedPlot(
+    """The unique identifier of an object"""
+    id: ID!
+  ): RenderedPlot!
+  experiment(
+    """The unique identifier of an object"""
+    id: ID!
+  ): Experiment!
+}
+
+type ContinousScanView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  direction: ScanDirection!
+}
+
+enum ScanDirection {
+  ROW_COLUMN_SLICE
+  COLUMN_ROW_SLICE
+  SLICE_ROW_COLUMN
+  ROW_COLUMN_SLICE_SNAKE
+  COLUMN_ROW_SLICE_SNAKE
+  SLICE_ROW_COLUMN_SNAKE
+}
+
+input ContinousScanViewFilter {
+  isGlobal: Boolean
+  provenance: ProvenanceFilter
+  AND: ContinousScanViewFilter
+  OR: ContinousScanViewFilter
+  direction: ContinousScanDirection
+}
+
+enum ContinousScanDirection {
+  ROW_COLUMN_SLICE
+  COLUMN_ROW_SLICE
+  SLICE_ROW_COLUMN
+  ROW_COLUMN_SLICE_SNAKE
+  COLUMN_ROW_SLICE_SNAKE
+  SLICE_ROW_COLUMN_SNAKE
+}
+
+type WellPositionView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  well: MultiWellPlate
+  row: Int
+  column: Int
+}
+
+type MultiWellPlate {
+  id: ID!
+  views(filters: WellPositionViewFilter, pagination: OffsetPaginationInput): [WellPositionView!]!
+  name: String
+  description: String
+  rows: Int
+  columns: Int
+}
+
+input WellPositionViewFilter {
+  isGlobal: Boolean
+  provenance: ProvenanceFilter
+  AND: WellPositionViewFilter
+  OR: WellPositionViewFilter
+  well: MultiWellPlateFilter
+  row: Int
+  column: Int
+}
+
+input MultiWellPlateFilter {
+  ids: [ID!]
+  search: String
+  id: ID
+  name: StrFilterLookup
+  AND: MultiWellPlateFilter
+  OR: MultiWellPlateFilter
+}
+
+type AcquisitionView implements View {
+  image: Image!
+  zMin: Int
+  zMax: Int
+  xMin: Int
+  xMax: Int
+  yMin: Int
+  yMax: Int
+  tMin: Int
+  tMax: Int
+  cMin: Int
+  cMax: Int
+  isGlobal: Boolean!
+
+  """The accessor"""
+  accessor: [String!]!
+  id: ID!
+  description: String
+  acquiredAt: DateTime
+  operator: User
+}
+
+type RenderedPlot implements Plot {
+  entity: String!
+  id: ID!
+  store: MediaStore!
+  name: String!
+  description: String
+  overlays: [Overlay!]
+}
+
+interface Plot {
+  entity: String!
+}
+
+type Overlay {
+  object: String!
+  identifier: String!
+  color: String!
+  x: Int!
+  y: Int!
+}
+
+input RenderedPlotFilter {
+  ids: [ID!]
+  search: String
+  id: ID
+  AND: RenderedPlotFilter
+  OR: RenderedPlotFilter
+}
+
+type RenderTree {
+  id: ID!
+  name: String!
+  linkedContexts(filters: RGBContextFilter, pagination: OffsetPaginationInput): [RGBContext!]!
+  tree: Tree!
+}
+
+type Tree {
+  children: [RenderNode!]!
+}
+
+input RenderTreeFilter {
+  id: ID
+  provenance: ProvenanceFilter
+  AND: RenderTreeFilter
+  OR: RenderTreeFilter
+}
+
+input RenderTreeOrder {
+  createdAt: Ordering
+}
+
+type Experiment {
+  id: ID!
+  name: String!
+  description: String
+  history(pagination: OffsetPaginationInput): [History!]!
+  createdAt: DateTime!
+  creator: User
+}
+
+input ExperimentFilter {
+  ids: [ID!]
+  search: String
+  id: ID
+  AND: ExperimentFilter
+  OR: ExperimentFilter
+}
+
+input TableFilter {
+  id: ID
+  ids: [ID!]
+  AND: TableFilter
+  OR: TableFilter
+}
+
+type ImageAccessor implements Accessor {
+  id: ID!
+  table: Table!
+  keys: [String!]!
+  minIndex: Int
+  maxIndex: Int
+}
+
+union DatasetImageFile = Dataset | Image | File
+
+input DatasetChildrenFilter {
+  showChildren: Boolean = null
+}
+
+input ChildrenPaginationInput {
+  limit: Int = 200
+  offset: Int = 0
+}
+
+input RowFilter {
+  clause: String = null
+}
+
+input TablePaginationInput {
+  limit: Int = 200
+  offset: Int = 0
+}
+
+type Mutation {
+  """Relate an image to a dataset"""
+  relateToDataset(
+    """Input data for `relateToDataset` mutation"""
+    input: RelateToDatasetInput!
+  ): Image!
+
+  """Request credentials to upload a new image"""
+  requestUpload(input: RequestUploadInput!): Credentials!
+
+  """Request credentials to access an image"""
+  requestAccess(input: RequestAccessInput!): AccessCredentials!
+
+  """Request credentials for media file upload"""
+  requestMediaUpload(input: RequestMediaUploadInput!): PresignedPostCredentials!
+
+  """Request credentials to upload a new table"""
+  requestTableUpload(input: RequestTableUploadInput!): Credentials!
+
+  """Request credentials to access a table"""
+  requestTableAccess(input: RequestTableAccessInput!): AccessCredentials!
+
+  """Request credentials to upload a new file"""
+  requestFileUpload(input: RequestFileUploadInput!): Credentials!
+
+  """Request presigned credentials for file upload"""
+  requestFileUploadPresigned(input: RequestFileUploadInput!): PresignedPostCredentials!
+
+  """Request credentials to access a file"""
+  requestFileAccess(input: RequestFileAccessInput!): AccessCredentials!
+
+  """Create a new view for affine transformation data"""
+  createAffineTransformationView(input: AffineTransformationViewInput!): AffineTransformationView!
+
+  """Create an image from array-like data"""
+  fromArrayLike(input: FromArrayLikeInput!): Image!
+
+  """Pin an image for quick access"""
+  pinImage(input: PinImageInput!): Image!
+
+  """Update an existing image's metadata"""
+  updateImage(input: UpdateImageInput!): Image!
+
+  """Delete an existing image"""
+  deleteImage(input: DeleteImageInput!): ID!
+
+  """Create a new render tree for image visualization"""
+  createRenderTree(input: RenderTreeInput!): RenderTree!
+
+  """Create a table from parquet-like data"""
+  fromParquetLike(input: FromParquetLike!): Table!
+
+  """Create a file from file-like data"""
+  fromFileLike(input: FromFileLike!): File!
+
+  """Delete an existing file"""
+  deleteFile(input: DeleteFileInput!): ID!
+
+  """Create a new rendered plot"""
+  createRenderedPlot(input: RenderedPlotInput!): RenderedPlot!
+
+  """Create a new channel"""
+  createChannel(input: ChannelInput!): Channel!
+
+  """Pin a channel for quick access"""
+  pinChannel(input: PinChannelInput!): Channel!
+
+  """Ensure a channel exists, creating if needed"""
+  ensureChannel(input: ChannelInput!): Channel!
+
+  """Delete an existing channel"""
+  deleteChannel(input: DeleteChannelInput!): ID!
+
+  """Create a new stage for organizing data"""
+  createStage(input: StageInput!): Stage!
+
+  """Pin a stage for quick access"""
+  pinStage(input: PinStageInput!): Stage!
+
+  """Delete an existing stage"""
+  deleteStage(input: DeleteStageInput!): ID!
+
+  """Create a new RGB context for image visualization"""
+  createRgbContext(input: CreateRGBContextInput!): RGBContext!
+
+  """Delete an existing RGB context"""
+  deleteRgbContext(input: DeleteRGBContextInput!): ID!
+
+  """Update settings of an existing RGB context"""
+  updateRgbContext(input: UpdateRGBContextInput!): RGBContext!
+
+  """Create a new dataset to organize data"""
+  createDataset(input: CreateDatasetInput!): Dataset!
+
+  """Update dataset metadata"""
+  updateDataset(input: ChangeDatasetInput!): Dataset!
+
+  """Revert dataset to a previous version"""
+  revertDataset(input: RevertInput!): Dataset!
+
+  """Pin a dataset for quick access"""
+  pinDataset(input: PinDatasetInput!): Dataset!
+
+  """Delete an existing dataset"""
+  deleteDataset(input: DeleteDatasetInput!): ID!
+
+  """Add datasets as children of another dataset"""
+  putDatasetsInDataset(input: AssociateInput!): Dataset!
+
+  """Remove datasets from being children of another dataset"""
+  releaseDatasetsFromDataset(input: DesociateInput!): Dataset!
+
+  """Add images to a dataset"""
+  putImagesInDataset(input: AssociateInput!): Dataset!
+
+  """Remove images from a dataset"""
+  releaseImagesFromDataset(input: DesociateInput!): Dataset!
+
+  """Add files to a dataset"""
+  putFilesInDataset(input: AssociateInput!): Dataset!
+
+  """Remove files from a dataset"""
+  releaseFilesFromDataset(input: DesociateInput!): Dataset!
+
+  """Create a new multi-well plate configuration"""
+  createMultiWellPlate(input: MultiWellPlateInput!): MultiWellPlate!
+
+  """Ensure a multi-well plate exists, creating if needed"""
+  ensureMultiWellPlate(input: MultiWellPlateInput!): MultiWellPlate!
+
+  """Pin a multi-well plate for quick access"""
+  pinMultiWellPlate(input: PintMultiWellPlateInput!): MultiWellPlate!
+
+  """Delete an existing multi-well plate configuration"""
+  deleteMultiWellPlate(input: DeleteMultiWellInput!): ID!
+
+  """Create a new collection of views to organize related views"""
+  createViewCollection(input: ViewCollectionInput!): ViewCollection!
+
+  """Pin a view collection for quick access"""
+  pinViewCollection(input: PinViewCollectionInput!): ViewCollection!
+
+  """Delete an existing view collection"""
+  deleteViewCollection(input: DeleteViewCollectionInput!): ID!
+
+  """Create a new era for temporal organization"""
+  createEra(input: EraInput!): Era!
+
+  """Pin an era for quick access"""
+  pinEra(input: PinEraInput!): Era!
+
+  """Delete an existing era"""
+  deleteEra(input: DeleteEraInput!): ID!
+
+  """Create a new view for label data"""
+  createLabelView(input: LabelViewInput!): LabelView!
+
+  """Create a new view for temporal data"""
+  createTimepointView(input: TimepointViewInput!): TimepointView!
+
+  """Create a new view for file data"""
+  createFileView(input: FileViewInput!): FileView!
+
+  """Create a new view for region of interest data"""
+  createRoiView(input: ROIViewInput!): ROIView!
+
+  """Create a new view for optical settings"""
+  createOpticsView(input: OpticsViewInput!): OpticsView!
+
+  """Create a new view for RGB image data"""
+  createRgbView(input: RGBViewInput!): RGBView!
+
+  """Create a new view for channel data"""
+  createChannelView(input: ChannelViewInput!): ChannelView!
+
+  """Create a new view for structural data"""
+  createStructureView(input: StructureViewInput!): StructureView!
+
+  """Create a new view for well position data"""
+  createWellPositionView(input: WellPositionViewInput!): WellPositionView!
+
+  """Create a new view for continuous scan data"""
+  createContinousScanView(input: ContinousScanViewInput!): ContinousScanView!
+
+  """Delete an existing affine transformation view"""
+  deleteAffineTransformationView(input: DeleteViewInput!): ID!
+
+  """Delete an existing channel view"""
+  deleteChannelView(input: DeleteViewInput!): ID!
+
+  """Delete an existing timepoint view"""
+  deleteTimepointView(input: DeleteViewInput!): ID!
+
+  """Delete an existing optics view"""
+  deleteOpticsView(input: DeleteViewInput!): ID!
+
+  """Delete an existing RGB view"""
+  deleteRgbView(input: DeleteViewInput!): ID!
+
+  """Delete any type of view"""
+  deleteView(input: DeleteViewInput!): ID!
+
+  """Pin a view for quick access"""
+  pinView(input: PinViewInput!): View!
+
+  """Create a new instrument configuration"""
+  createInstrument(input: InstrumentInput!): Instrument!
+
+  """Delete an existing instrument"""
+  deleteInstrument(input: DeleteInstrumentInput!): ID!
+
+  """Pin an instrument for quick access"""
+  pinInstrument(input: PinInstrumentInput!): Instrument!
+
+  """Ensure an instrument exists, creating if needed"""
+  ensureInstrument(input: InstrumentInput!): Instrument!
+
+  """Create a new microscope objective configuration"""
+  createObjective(input: ObjectiveInput!): Objective!
+
+  """Delete an existing objective"""
+  deleteObjective(input: DeleteObjectiveInput!): ID!
+
+  """Pin an objective for quick access"""
+  pinObjective(input: PinObjectiveInput!): Objective!
+
+  """Ensure an objective exists, creating if needed"""
+  ensureObjective(input: ObjectiveInput!): Objective!
+
+  """Create a new camera configuration"""
+  createCamera(input: CameraInput!): Camera!
+
+  """Delete an existing camera"""
+  deleteCamera(input: DeleteCameraInput!): ID!
+
+  """Pin a camera for quick access"""
+  pinCamera(input: PinCameraInput!): Camera!
+
+  """Ensure a camera exists, creating if needed"""
+  ensureCamera(input: CameraInput!): Camera!
+
+  """Create a new state snapshot"""
+  createSnapshot(input: SnapshotInput!): Snapshot!
+
+  """Delete an existing snapshot"""
+  deleteSnapshot(input: DeleteRenderedPlot!): ID!
+
+  """Pin a snapshot for quick access"""
+  pinSnapshot(input: PinSnapshotInput!): Snapshot!
+
+  """Create a new region of interest"""
+  createRoi(input: RoiInput!): ROI!
+
+  """Update an existing region of interest"""
+  updateRoi(input: UpdateRoiInput!): ROI!
+
+  """Pin a region of interest for quick access"""
+  pinRoi(input: PinROIInput!): ROI!
+
+  """Delete an existing region of interest"""
+  deleteRoi(input: DeleteRoiInput!): ID!
+}
+
+input RelateToDatasetInput {
+  id: ID!
+  other: ID!
+}
+
+"""
+Temporary Credentials for a file upload that can be used by a Client (e.g. in a python datalayer)
+"""
+type Credentials {
+  status: String!
+  accessKey: String!
+  secretKey: String!
+  sessionToken: String!
+  datalayer: String!
+  bucket: String!
+  key: String!
+  store: String!
+}
+
+input RequestUploadInput {
+  key: String!
+  datalayer: String!
+}
+
+"""
+Temporary Credentials for a file download that can be used by a Client (e.g. in a python datalayer)
+"""
+type AccessCredentials {
+  accessKey: String!
+  secretKey: String!
+  sessionToken: String!
+  bucket: String!
+  key: String!
+  path: String!
+}
+
+input RequestAccessInput {
+  store: ID!
+  duration: Int = null
+}
+
+"""
+Temporary Credentials for a file upload that can be used by a Client (e.g. in a python datalayer)
+"""
+type PresignedPostCredentials {
+  key: String!
+  xAmzAlgorithm: String!
+  xAmzCredential: String!
+  xAmzDate: String!
+  xAmzSignature: String!
+  policy: String!
+  datalayer: String!
+  bucket: String!
+  store: String!
+}
+
+input RequestMediaUploadInput {
+  key: String!
+  datalayer: String!
+}
+
+input RequestTableUploadInput {
+  key: String!
+  datalayer: String!
+}
+
+input RequestTableAccessInput {
+  store: ID!
+  duration: Int
+}
+
+input RequestFileUploadInput {
+  key: String!
+  datalayer: String!
+}
+
+input RequestFileAccessInput {
+  store: ID!
+  duration: Int
+}
+
+input AffineTransformationViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  stage: ID = null
+  affineMatrix: FourByFourMatrix!
+  image: ID!
+}
+
+"""Input type for creating an image from an array-like object"""
+input FromArrayLikeInput {
+  """The array-like object to create the image from"""
+  array: ArrayLike!
+
+  """The name of the image"""
+  name: String!
+
+  """Optional dataset ID to associate the image with"""
+  dataset: ID = null
+
+  """Optional list of channel views"""
+  channelViews: [PartialChannelViewInput!] = null
+
+  """Optional list of affine transformation views"""
+  transformationViews: [PartialAffineTransformationViewInput!] = null
+
+  """Optional list of acquisition views"""
+  acquisitionViews: [PartialAcquisitionViewInput!] = null
+
+  """Optional list of pixel views"""
+  pixelViews: [PartialPixelViewInput!] = null
+
+  """Optional list of structure views"""
+  structureViews: [PartialStructureViewInput!] = null
+
+  """Optional list of RGB views"""
+  rgbViews: [PartialRGBViewInput!] = null
+
+  """Optional list of timepoint views"""
+  timepointViews: [PartialTimepointViewInput!] = null
+
+  """Optional list of optics views"""
+  opticsViews: [PartialOpticsViewInput!] = null
+
+  """Optional list of scale views"""
+  scaleViews: [PartialScaleViewInput!] = null
+
+  """Optional list of tags to associate with the image"""
+  tags: [String!] = null
+
+  """Optional list of ROI views"""
+  roiViews: [PartialROIViewInput!] = null
+
+  """Optional list of file views"""
+  fileViews: [PartialFileViewInput!] = null
+
+  """Optional list of derived views"""
+  derivedViews: [PartialDerivedViewInput!] = null
+}
+
+"""
+The `ArrayLike` scalar type represents a reference to a store previously created by the user n a datalayer
+"""
+scalar ArrayLike
+
+input PartialChannelViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+
+  """The ID of the channel this view is for"""
+  channel: ID!
+}
+
+input PartialAffineTransformationViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  stage: ID = null
+  affineMatrix: FourByFourMatrix!
+}
+
+input PartialAcquisitionViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  description: String = null
+  acquiredAt: DateTime = null
+  operator: ID = null
+}
+
+input PartialPixelViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  linkedView: ID = null
+  rangeLabels: [RangePixelLabel!] = null
+}
+
+input RangePixelLabel {
+  group: ID = null
+  entityKind: ID!
+  min: Int!
+  max: Int!
+}
+
+input PartialStructureViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  structure: StructureString!
+}
+
+input PartialRGBViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  context: ID = null
+  gamma: Float = null
+  contrastLimitMin: Float = null
+  contrastLimitMax: Float = null
+  rescale: Boolean = null
+  scale: Float = null
+  active: Boolean = null
+  colorMap: ColorMap = null
+  baseColor: [Float!] = null
+}
+
+input PartialTimepointViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  era: ID = null
+  msSinceStart: Milliseconds = null
+  indexSinceStart: Int = null
+}
+
+input PartialOpticsViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  instrument: ID = null
+  objective: ID = null
+  camera: ID = null
+}
+
+input PartialScaleViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  parent: ID = null
+  scaleX: Float = null
+  scaleY: Float = null
+  scaleZ: Float = null
+  scaleT: Float = null
+  scaleC: Float = null
+}
+
+input PartialROIViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  roi: ID!
+}
+
+input PartialFileViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  file: ID!
+  seriesIdentifier: String = null
+}
+
+input PartialDerivedViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  originImage: ID!
+}
+
+input PinImageInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input UpdateImageInput {
+  id: ID!
+  tags: [String!] = null
+  name: String = null
+}
+
+input DeleteImageInput {
+  id: ID!
+}
+
+input RenderTreeInput {
+  tree: TreeInput!
+  name: String!
+}
+
+input TreeInput {
+  id: String = "root"
+  children: [TreeNodeInput!]!
+}
+
+input TreeNodeInput {
+  kind: RenderNodeKind!
+  label: String = null
+  context: String = null
+  gap: Int = null
+  children: [TreeNodeInput!]
+}
+
+enum RenderNodeKind {
+  CONTEXT
+  OVERLAY
+  GRID
+  SPIT
+}
+
+input FromParquetLike {
+  """The parquet dataframe to create the table from"""
+  dataframe: ParquetLike!
+
+  """The name of the table"""
+  name: String!
+
+  """The IDs of tables this table was derived from"""
+  origins: [ID!] = null
+
+  """The dataset ID this table belongs to"""
+  dataset: ID = null
+
+  """Label accessors to create for this table"""
+  labelAccessors: [PartialLabelAccessorInput!] = null
+
+  """Image accessors to create for this table"""
+  imageAccessors: [PartialImageAccessorInput!] = null
+}
+
+"""
+The `ParquetLike` scalar type represents a reference to a parquet objected stored previously created by the user on a datalayer
+"""
+scalar ParquetLike
+
+input PartialLabelAccessorInput {
+  keys: [String!]!
+  minIndex: Int = null
+  maxIndex: Int = null
+  pixelView: ID!
+}
+
+input PartialImageAccessorInput {
+  keys: [String!]!
+  minIndex: Int = null
+  maxIndex: Int = null
+  image: ID!
+}
+
+input FromFileLike {
+  name: String!
+  file: FileLike!
+  origins: [ID!] = null
+  dataset: ID = null
+}
+
+"""
+The `FileLike` scalar type represents a reference to a big file storage previously created by the user n a datalayer
+"""
+scalar FileLike
+
+input DeleteFileInput {
+  id: ID!
+}
+
+input RenderedPlotInput {
+  name: String!
+  plot: Upload!
+  overlays: [OverlayInput!]
+}
+
+scalar Upload
+
+input OverlayInput {
+  object: String!
+  identifier: String!
+  color: String!
+  x: Int!
+  y: Int!
+}
+
+input ChannelInput {
+  name: String!
+}
+
+input PinChannelInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input DeleteChannelInput {
+  id: ID!
+}
+
+input StageInput {
+  name: String!
+  instrument: ID = null
+}
+
+input PinStageInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input DeleteStageInput {
+  id: ID!
+}
+
+input CreateRGBContextInput {
+  name: String = null
+  thumbnail: ID = null
+  image: ID!
+  views: [PartialRGBViewInput!] = null
+  z: Int = null
+  t: Int = null
+  c: Int = null
+}
+
+input DeleteRGBContextInput {
+  id: ID!
+}
+
+input UpdateRGBContextInput {
+  id: ID!
+  name: String = null
+  thumbnail: ID = null
+  views: [PartialRGBViewInput!] = null
+  z: Int = null
+  t: Int = null
+  c: Int = null
+}
+
+input CreateDatasetInput {
+  name: String!
+}
+
+input ChangeDatasetInput {
+  name: String!
+  id: ID!
+}
+
+input RevertInput {
+  id: ID!
+  historyId: ID!
+}
+
+input PinDatasetInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input DeleteDatasetInput {
+  id: ID!
+}
+
+input AssociateInput {
+  selfs: [ID!]!
+  other: ID!
+}
+
+input DesociateInput {
+  selfs: [ID!]!
+  other: ID!
+}
+
+input MultiWellPlateInput {
+  name: String!
+  columns: Int = null
+  rows: Int = null
+}
+
+input PintMultiWellPlateInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input DeleteMultiWellInput {
+  id: ID!
+}
+
+type ViewCollection {
+  id: ID!
+  name: String!
+  views: [View!]!
+  history(pagination: OffsetPaginationInput): [History!]!
+  affineTransformationViews(filters: AffineTransformationViewFilter, pagination: OffsetPaginationInput): [AffineTransformationView!]!
+  labelViews: [LabelView!]!
+  channelViews: [ChannelView!]!
+}
+
+input ViewCollectionInput {
+  name: String!
+}
+
+input PinViewCollectionInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input DeleteViewCollectionInput {
+  id: ID!
+}
+
+input EraInput {
+  name: String!
+  begin: DateTime = null
+}
+
+input PinEraInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input DeleteEraInput {
+  id: ID!
+}
+
+input LabelViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  label: String!
+  image: ID!
+}
+
+input TimepointViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  era: ID = null
+  msSinceStart: Milliseconds = null
+  indexSinceStart: Int = null
+  image: ID!
+}
+
+input FileViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  file: ID!
+  seriesIdentifier: String = null
+  image: ID!
+}
+
+input ROIViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  roi: ID!
+  image: ID!
+}
+
+input OpticsViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  instrument: ID = null
+  objective: ID = null
+  camera: ID = null
+  image: ID!
+}
+
+input RGBViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  context: ID!
+  gamma: Float = null
+  contrastLimitMin: Float = null
+  contrastLimitMax: Float = null
+  rescale: Boolean = null
+  scale: Float = null
+  active: Boolean = null
+  colorMap: ColorMap = null
+  baseColor: [Float!] = null
+  image: ID!
+}
+
+input ChannelViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+
+  """The ID of the channel this view is for"""
+  channel: ID!
+
+  """The ID of the image this view is for"""
+  image: ID!
+}
+
+input StructureViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  structure: StructureString!
+  image: ID!
+}
+
+input WellPositionViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  well: ID = null
+  row: Int = null
+  column: Int = null
+  image: ID!
+}
+
+input ContinousScanViewInput {
+  """The collection this view belongs to"""
+  collection: ID = null
+
+  """The minimum z coordinate of the view"""
+  zMin: Int = null
+
+  """The maximum z coordinate of the view"""
+  zMax: Int = null
+
+  """The minimum x coordinate of the view"""
+  xMin: Int = null
+
+  """The maximum x coordinate of the view"""
+  xMax: Int = null
+
+  """The minimum y coordinate of the view"""
+  yMin: Int = null
+
+  """The maximum y coordinate of the view"""
+  yMax: Int = null
+
+  """The minimum t coordinate of the view"""
+  tMin: Int = null
+
+  """The maximum t coordinate of the view"""
+  tMax: Int = null
+
+  """The minimum c (channel) coordinate of the view"""
+  cMin: Int = null
+
+  """The maximum c (channel) coordinate of the view"""
+  cMax: Int = null
+  direction: ScanDirection!
+  image: ID!
+}
+
+input DeleteViewInput {
+  id: ID!
+}
+
+input PinViewInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input InstrumentInput {
+  serialNumber: String!
+  manufacturer: String = null
+  name: String = null
+  model: String = null
+}
+
+input DeleteInstrumentInput {
+  id: ID!
+}
+
+input PinInstrumentInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input ObjectiveInput {
+  serialNumber: String!
+  name: String = null
+  na: Float = null
+  magnification: Float = null
+  immersion: String = null
+}
+
+input DeleteObjectiveInput {
+  id: ID!
+}
+
+input PinObjectiveInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input CameraInput {
+  serialNumber: String!
+  name: String = null
+  model: String = null
+  bitDepth: Int = null
+  sensorSizeX: Int = null
+  sensorSizeY: Int = null
+  pixelSizeX: Micrometers = null
+  pixelSizeY: Micrometers = null
+  manufacturer: String = null
+}
+
+input DeleteCameraInput {
+  id: ID!
+}
+
+input PinCameraInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input SnapshotInput {
+  file: Upload!
+  image: ID!
+}
+
+input DeleteRenderedPlot {
+  id: ID!
+}
+
+input PinSnapshotInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input RoiInput {
+  """The image this ROI belongs to"""
+  image: ID!
+
+  """The vector coordinates defining the ROI"""
+  vectors: [FiveDVector!]!
+
+  """The type/kind of ROI"""
+  kind: RoiKind!
+}
+
+input UpdateRoiInput {
+  roi: ID!
+  vectors: [FiveDVector!] = null
+  kind: RoiKind = null
+  entity: ID = null
+  entityKind: ID = null
+  entityGroup: ID = null
+  entityParent: ID = null
+}
+
+input PinROIInput {
+  id: ID!
+  pin: Boolean!
+}
+
+input DeleteRoiInput {
+  id: ID!
+}
+
+type Subscription {
+  """Subscribe to real-time image history events"""
+  historyEvents: Image!
+
+  """Subscribe to real-time ROI updates"""
+  rois(image: ID!): RoiEvent!
+
+  """Subscribe to real-time image updates"""
+  images(dataset: ID = null): ImageEvent!
+
+  """Subscribe to real-time file updates"""
+  files(dataset: ID = null): FileEvent!
+}
+
+type RoiEvent {
+  create: ROI
+  delete: ID
+  update: ROI
+}
+
+type ImageEvent {
+  create: Image
+  delete: ID
+  update: Image
+}
+
+type FileEvent {
+  create: File
+  delete: ID
+  update: File
+  moved: File
+}

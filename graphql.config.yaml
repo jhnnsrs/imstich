@@ -1,0 +1,133 @@
+projects:
+  mikro:
+    documents: /workspaces/imstich/documents/mikro/**/*.graphql
+    extensions:
+      turms:
+        pydantic_version: v2
+        domain: null
+        out_dir: api
+        dump_configuration: true
+        configuration_name: project.json
+        dump_schema: true
+        schema_name: schema.graphql
+        generated_name: mikro.py
+        verbose: false
+        exit_on_error: true
+        allow_introspection: true
+        object_bases:
+        - pydantic.BaseModel
+        interface_bases: null
+        always_resolve_interfaces: true
+        exclude_typenames: true
+        scalar_definitions:
+          StructureString: str
+          ArrayLike: mikro_next.scalars.ArrayLike
+          ParquetLike: mikro_next.scalars.ParquetLike
+          FileLike: mikro_next.scalars.FileLike
+          Upload: mikro_next.scalars.Upload
+          Vector: mikro_next.scalars.Vector
+          TwoDVector: mikro_next.scalars.TwoDVector
+          ThreeDVector: mikro_next.scalars.ThreeDVector
+          FourDVector: mikro_next.scalars.FourDVector
+          FiveDVector: mikro_next.scalars.FiveDVector
+          Matrix: mikro_next.scalars.Matrix
+          Metric: typing.Any
+          Milliseconds: mikro_next.scalars.Milliseconds
+          Micrometers: mikro_next.scalars.Micrometers
+          MikroStore: mikro_next.scalars.MikroStore
+          Micrograms: mikro_next.scalars.Micrograms
+          Microliters: mikro_next.scalars.Microliters
+          FourByFourMatrix: mikro_next.scalars.FourByFourMatrix
+          ID: rath.scalars.ID
+          RGBAColor: mikro_next.scalars.RGBAColor
+        freeze:
+          enabled: true
+          types:
+          - input
+          - fragment
+          - object
+          exclude: null
+          include: null
+          exclude_fields: []
+          include_fields: []
+          convert_list_to_tuple: true
+        options:
+          enabled: true
+          extra: forbid
+          allow_mutation: null
+          allow_population_by_field_name: true
+          orm_mode: null
+          use_enum_values: true
+          validate_assignment: null
+          types:
+          - input
+          exclude: null
+          include: null
+        skip_forwards: false
+        additional_bases:
+          Image:
+          - mikro_next.traits.HasZarrStoreTrait
+          Table:
+          - mikro_next.traits.HasParquestStoreTrait
+          ZarrStore:
+          - mikro_next.traits.HasZarrStoreAccessor
+          ParquetStore:
+          - mikro_next.traits.HasParquetStoreAccesor
+          BigFileStore:
+          - mikro_next.traits.HasDownloadAccessor
+          MediaStore:
+          - mikro_next.traits.HasPresignedDownloadAccessor
+          ROI:
+          - mikro_next.traits.IsVectorizableTrait
+          TransformationView:
+          - mikro_next.traits.PixelTranslatable
+          Expression:
+          - mikro_next.traits.ExpressionTrait
+          Graph:
+          - mikro_next.traits.GraphTrait
+          LinkedExpression:
+          - mikro_next.traits.LinkedExpressionTrait
+          Entity:
+          - mikro_next.traits.EntityTrait
+          EntityRelation:
+          - mikro_next.traits.EntityRelationTrait
+          Ontology:
+          - mikro_next.traits.OntologyTrait
+        additional_config: {}
+        force_plugin_order: true
+        parsers: []
+        plugins:
+        - type: turms.plugins.enums.EnumsPlugin
+        - type: turms.plugins.inputs.InputsPlugin
+        - type: turms.plugins.fragments.FragmentsPlugin
+        - type: turms.plugins.operations.OperationsPlugin
+        - type: turms.plugins.funcs.FuncsPlugin
+          expand_input_types:
+          - input
+          global_kwargs:
+          - type: mikro_next.rath.MikroNextRath
+            key: rath
+            description: The mikro rath client
+          definitions:
+          - type: subscription
+            is_async: true
+            use: mikro_next.funcs.asubscribe
+          - type: query
+            is_async: true
+            use: mikro_next.funcs.aexecute
+          - type: mutation
+            is_async: true
+            use: mikro_next.funcs.aexecute
+          - type: subscription
+            use: mikro_next.funcs.subscribe
+          - type: query
+            use: mikro_next.funcs.execute
+          - type: mutation
+            use: mikro_next.funcs.execute
+        processors:
+        - type: turms.processors.black.BlackProcessor
+        stylers:
+        - type: turms.stylers.default.DefaultStyler
+        - type: turms.stylers.appender.AppenderStyler
+          append_fragment: ''
+    schema: /workspaces/imstich/schemas/mikro.schema.graphql
