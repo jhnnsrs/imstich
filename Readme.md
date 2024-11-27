@@ -1,5 +1,5 @@
 
-# ImSwtitch
+# ImStitch
 
 A Python application for 2D image stitching and stage movement registration using the `arkitekt-next` framework and `ashlarUC2`. This repository includes a Dockerized setup for running the application seamlessly.
 
